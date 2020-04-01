@@ -139,12 +139,12 @@ var serverApiRequest = /*#__PURE__*/function () {
           case 3:
             response = _context.sent;
 
-            if (response.ok) {
+            if (response) {
               _context.next = 6;
               break;
             }
 
-            throw new Error("Request error(error code: " + response.status);
+            throw new Error("Request error(error code: " + response.status + ")");
 
           case 6:
             _context.next = 8;
@@ -176,7 +176,15 @@ var serverApiRequest = /*#__PURE__*/function () {
 
 var sendAnalytics = function sendAnalytics(a, b) {
   /*sendBeacon maybe*/
-};
+  var response = navigator.sendBeacon("//t.syshub.ru" + a, b);
+
+  if (response) {
+    return "Successfully queued!";
+  } else {
+    return "Failure.";
+  }
+}; // window.addEventListener("unload", sendAnalytics, false);
+
 /* Нужно:
     1 Сделать функцию рабочей в принципе не меняя логики но доступно ES8+
     2 Общая логика: запрос, если успех, то отправка данных в аналитику, обработка данных и их возврат
@@ -187,35 +195,49 @@ var sendAnalytics = function sendAnalytics(a, b) {
 
 var requestData = /*#__PURE__*/function () {
   var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(_ref2) {
-    var id, param, array, array2;
+    var id, param, response;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
             id = _ref2.id, param = _ref2.param;
-            _context2.next = 3;
+            _context2.prev = 1;
+            _context2.next = 4;
             return serverApiRequest("/query/data/" + id + "/param/" + param);
 
-          case 3:
-            array = _context2.sent;
-            // after complete request if *not* Error call
+          case 4:
+            response = _context2.sent;
+
+            if (!response.error) {
+              _context2.next = 7;
+              break;
+            }
+
+            throw new Error(response.error);
+
+          case 7:
             sendAnalytics("/requestDone", {
               type: "data",
               id: id,
               param: param
-            }); // магия, описать
-
-            array2 = array.filter(function (i) {
-              return i !== null;
             });
-            return _context2.abrupt("return", array2);
+            return _context2.abrupt("return", response.filter(function (i) {
+              return i !== null;
+            }).map(function (i) {
+              return Object.values(i);
+            }).flat());
 
-          case 7:
+          case 11:
+            _context2.prev = 11;
+            _context2.t0 = _context2["catch"](1);
+            return _context2.abrupt("return", _context2.t0.name + ": " + _context2.t0.message);
+
+          case 14:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2);
+    }, _callee2, null, [[1, 11]]);
   }));
 
   return function requestData(_x2) {
