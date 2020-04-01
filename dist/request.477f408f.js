@@ -117,15 +117,19 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"src/index.js":[function(require,module,exports) {
+})({"modules/request.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-// Эта функция по идее должна быть импортирована,
-// но упрощено и нужно её простейшим образом реализовать
-// может вернуть массив вида (null | {v: number})[] или вернуть ошибку класса Error
-var serverApiRequest = /*#__PURE__*/function () {
+var _default = serverApiRequest = /*#__PURE__*/function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(a) {
     var response, data;
     return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -134,34 +138,30 @@ var serverApiRequest = /*#__PURE__*/function () {
           case 0:
             _context.prev = 0;
             _context.next = 3;
-            return fetch("//t.syshub.ru/".concat(a));
+            return fetch("//t.syshub.ru" + a);
 
           case 3:
             response = _context.sent;
-            _context.next = 6;
-            return response.json();
 
-          case 6:
-            data = _context.sent;
-
-            if (response.ok) {
-              _context.next = 9;
+            if (response) {
+              _context.next = 6;
               break;
             }
 
-            throw new Error(data.error);
+            throw new Error("Request error(error code: " + response.status + ")");
 
-          case 9:
-            return _context.abrupt("return", data.filter(function (i) {
-              return i !== null;
-            }).map(function (i) {
-              return Object.values(i);
-            }).flat());
+          case 6:
+            _context.next = 8;
+            return response.json();
+
+          case 8:
+            data = _context.sent;
+            return _context.abrupt("return", data);
 
           case 12:
             _context.prev = 12;
             _context.t0 = _context["catch"](0);
-            return _context.abrupt("return", "".concat(_context.t0.name, ": ").concat(_context.t0.message));
+            return _context.abrupt("return", _context.t0.name + ": " + _context.t0.message);
 
           case 15:
           case "end":
@@ -174,108 +174,9 @@ var serverApiRequest = /*#__PURE__*/function () {
   return function serverApiRequest(_x) {
     return _ref.apply(this, arguments);
   };
-}(); // Можно выполнить по аналогии с serverApiRequest(), а можно лучше, см. подсказку ниже
-// Не должно прерывать выполнение приложения и ломать его, если что-то пошло не так
+}();
 
-
-var sendAnalytics = function sendAnalytics(a, b) {
-  /*sendBeacon maybe*/
-  var response = navigator.sendBeacon(a, b);
-  return response ? "Successfully queued!" : "Failure.";
-};
-/* Нужно:
-    1 Сделать функцию рабочей в принципе не меняя логики но доступно ES8+
-    2 Общая логика: запрос, если успех, то отправка данных в аналитику, обработка данных и их возврат
-    3 Подсветить места, где ТЗ недостаточно
-    4 Подсветить места, вероятно проблемные
-*/
-
-
-var requestData = /*#__PURE__*/function () {
-  var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(_ref2) {
-    var id, param, response;
-    return regeneratorRuntime.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            id = _ref2.id, param = _ref2.param;
-            _context2.next = 3;
-            return serverApiRequest("query/data/".concat(id, "/param/").concat(param));
-
-          case 3:
-            response = _context2.sent;
-            sendAnalytics("/requestDone", {
-              type: "data",
-              id: id,
-              param: param
-            });
-            return _context2.abrupt("return", response);
-
-          case 6:
-          case "end":
-            return _context2.stop();
-        }
-      }
-    }, _callee2);
-  }));
-
-  return function requestData(_x2) {
-    return _ref3.apply(this, arguments);
-  };
-}(); // app proto
-// START DO NOT EDIT app
-
-
-_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
-  var log;
-  return regeneratorRuntime.wrap(function _callee3$(_context3) {
-    while (1) {
-      switch (_context3.prev = _context3.next) {
-        case 0:
-          log = function log(text) {
-            var app = document.querySelector("#app");
-            app.appendChild(document.createTextNode(JSON.stringify(text, null, 2)));
-            app.appendChild(document.createElement("br"));
-          };
-
-          _context3.t0 = log;
-          _context3.next = 4;
-          return requestData({
-            id: 1,
-            param: "any"
-          });
-
-        case 4:
-          _context3.t1 = _context3.sent;
-          (0, _context3.t0)(_context3.t1);
-          _context3.t2 = log;
-          _context3.next = 9;
-          return requestData({
-            id: 4,
-            param: "string"
-          });
-
-        case 9:
-          _context3.t3 = _context3.sent;
-          (0, _context3.t2)(_context3.t3);
-          _context3.t4 = log;
-          _context3.next = 14;
-          return requestData({
-            id: 4,
-            param: 404
-          });
-
-        case 14:
-          _context3.t5 = _context3.sent;
-          (0, _context3.t4)(_context3.t5);
-
-        case 16:
-        case "end":
-          return _context3.stop();
-      }
-    }
-  }, _callee3);
-}))(); // END DO NOT EDIT app
+exports.default = _default;
 },{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -480,5 +381,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/index.js"], null)
-//# sourceMappingURL=/src.a2b27638.js.map
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","modules/request.js"], null)
+//# sourceMappingURL=/request.477f408f.js.map

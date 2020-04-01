@@ -1,18 +1,21 @@
 // Эта функция по идее должна быть импортирована,
 // но упрощено и нужно её простейшим образом реализовать
 // может вернуть массив вида (null | {v: number})[] или вернуть ошибку класса Error
+
 const serverApiRequest = async a => {
   /*simulate request*/
-
   try {
-    const response = await fetch("//t.syshub.ru" + a);
-    if (!response) {
-      throw new Error("Request error(error code: " + response.status + ")");
-    }
+    const response = await fetch(`//t.syshub.ru/${a}`);
     const data = await response.json();
-    return data;
+    if (!response.ok) {
+      throw new Error(data.error);
+    }
+    return data
+      .filter(i => i !== null)
+      .map(i => Object.values(i))
+      .flat();
   } catch (e) {
-    return e.name + ": " + e.message;
+    return `${e.name}: ${e.message}`;
   }
 };
 
@@ -21,15 +24,9 @@ const serverApiRequest = async a => {
 
 const sendAnalytics = (a, b) => {
   /*sendBeacon maybe*/
-  const response = navigator.sendBeacon("//t.syshub.ru" + a, b);
-
-  if (response) {
-    return "Successfully queued!";
-  } else {
-    return "Failure.";
-  }
+  const response = navigator.sendBeacon(a, b);
+  return response ? "Successfully queued!" : "Failure.";
 };
-// window.addEventListener("unload", sendAnalytics, false);
 /* Нужно:
     1 Сделать функцию рабочей в принципе не меняя логики но доступно ES8+
     2 Общая логика: запрос, если успех, то отправка данных в аналитику, обработка данных и их возврат
@@ -38,31 +35,17 @@ const sendAnalytics = (a, b) => {
 */
 const requestData = async ({ id, param }) => {
   // should return [null, {v: 1}, {v: 4}, null] or Error (may return array (null | {v: number})[])
-  try {
-    const response = await serverApiRequest(
-      "/query/data/" + id + "/param/" + param
-    );
-    if (response.error) {
-      throw new Error(response.error);
-    }
-    sendAnalytics("/requestDone", {
-      type: "data",
-      id: id,
-      param: param
-    });
-    return response
-      .filter(i => i !== null)
-      .map(i => Object.values(i))
-      .flat();
-  } catch (e) {
-    return e.name + ": " + e.message;
-  }
+  const response = await serverApiRequest(`query/data/${id}/param/${param}`);
+  sendAnalytics("/requestDone", {
+    type: "data",
+    id,
+    param
+  });
 
+  return response;
   // after complete request if *not* Error call
 
   // магия, описать
-
-  // return array2;
   // return [1, 4]
 };
 
