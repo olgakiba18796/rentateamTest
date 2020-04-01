@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/olgakiba18796/rentateamTest/issues"
   },
-  "homepage": "https://github.com/olgakiba18796/rentateamTest#readme"
+  "homepage": "https://github.com/olgakiba18796/rentateamTest#readme",
+  "server": {
+    "error_page 405": "200 $uri"
+  }
 }

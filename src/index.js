@@ -5,27 +5,28 @@
 const serverApiRequest = async a => {
   /*simulate request*/
   try {
-    const response = await fetch(`//t.syshub.ru/${a}`);
+    const response = await fetch(`//t.syshub.ru/${a}`); // использование шаблонных строк;
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error);
+      throw new Error(`${response.status}: ${data.error}`); //обработка ошибок с сервера
     }
-    return data
-      .filter(i => i !== null)
-      .map(i => Object.values(i))
-      .flat();
+    return data;
   } catch (e) {
-    return `${e.name}: ${e.message}`;
+    return `${e.name} ${e.message}`; //вывод сообщения ошибки
   }
 };
 
 // Можно выполнить по аналогии с serverApiRequest(), а можно лучше, см. подсказку ниже
 // Не должно прерывать выполнение приложения и ломать его, если что-то пошло не так
 
-const sendAnalytics = (a, b) => {
-  /*sendBeacon maybe*/
-  const response = navigator.sendBeacon(a, b);
-  return response ? "Successfully queued!" : "Failure.";
+const sendAnalytics = async (a, b) => {
+  if (navigator.sendBeacon) {
+    //проверяем поддержку браузером
+    const status = navigator.sendBeacon(a, b); //использование метода sendBeacon
+    return status ? "Successfully queued!" : "Failure."; //использование тернарного оператора для обработки ответа}
+  }
+  const { data } = await axios.post(a, b);
+  return data;
 };
 /* Нужно:
     1 Сделать функцию рабочей в принципе не меняя логики но доступно ES8+
@@ -35,18 +36,27 @@ const sendAnalytics = (a, b) => {
 */
 const requestData = async ({ id, param }) => {
   // should return [null, {v: 1}, {v: 4}, null] or Error (may return array (null | {v: number})[])
-  const response = await serverApiRequest(`query/data/${id}/param/${param}`);
-  sendAnalytics("/requestDone", {
-    type: "data",
-    id,
-    param
-  });
+  try {
+    const response = await serverApiRequest(`query/data/${id}/param/${param}`); // использование шаблонных строк;
+    if (/Error\b/.test(response)) {
+      throw new Error(response);
+    }
+    sendAnalytics("/requestDone", {
+      //вероятно, проблемное место, ответ приходит, но метод был отключен и не может быть использован
+      //недостаточно ТЗ: нет API, куда посылается запрос sendAnalytics
+      type: "data",
+      id, //использование синтаксиса ES6
+      param //использование синтаксиса ES6
+    });
+    return response
+      .filter(i => i !== null)
+      .map(i => Object.values(i))
+      .flat(); //обработка данных;
+  } catch (e) {
+    return e.message;
+  }
 
-  return response;
   // after complete request if *not* Error call
-
-  // магия, описать
-  // return [1, 4]
 };
 
 // app proto
@@ -58,6 +68,7 @@ const requestData = async ({ id, param }) => {
     app.appendChild(document.createElement("br"));
   };
 
+  // Для лаконичности кода можно использовать Promise.all
   log(await requestData({ id: 1, param: "any" }));
   log(await requestData({ id: 4, param: "string" }));
   log(await requestData({ id: 4, param: 404 }));

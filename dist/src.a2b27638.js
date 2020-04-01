@@ -149,19 +149,15 @@ var serverApiRequest = /*#__PURE__*/function () {
               break;
             }
 
-            throw new Error(data.error);
+            throw new Error("".concat(response.status, ": ").concat(data.error));
 
           case 9:
-            return _context.abrupt("return", data.filter(function (i) {
-              return i !== null;
-            }).map(function (i) {
-              return Object.values(i);
-            }).flat());
+            return _context.abrupt("return", data);
 
           case 12:
             _context.prev = 12;
             _context.t0 = _context["catch"](0);
-            return _context.abrupt("return", "".concat(_context.t0.name, ": ").concat(_context.t0.message));
+            return _context.abrupt("return", "".concat(_context.t0.name, " ").concat(_context.t0.message));
 
           case 15:
           case "end":
@@ -178,11 +174,45 @@ var serverApiRequest = /*#__PURE__*/function () {
 // Не должно прерывать выполнение приложения и ломать его, если что-то пошло не так
 
 
-var sendAnalytics = function sendAnalytics(a, b) {
-  /*sendBeacon maybe*/
-  var response = navigator.sendBeacon(a, b);
-  return response ? "Successfully queued!" : "Failure.";
-};
+var sendAnalytics = /*#__PURE__*/function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(a, b) {
+    var status, _yield$axios$post, data;
+
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            if (!navigator.sendBeacon) {
+              _context2.next = 3;
+              break;
+            }
+
+            //проверяем поддержку браузером
+            status = navigator.sendBeacon(a, b); //использование метода sendBeacon
+
+            return _context2.abrupt("return", status ? "Successfully queued!" : "Failure.");
+
+          case 3:
+            _context2.next = 5;
+            return axios.post(a, b);
+
+          case 5:
+            _yield$axios$post = _context2.sent;
+            data = _yield$axios$post.data;
+            return _context2.abrupt("return", data);
+
+          case 8:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2);
+  }));
+
+  return function sendAnalytics(_x2, _x3) {
+    return _ref2.apply(this, arguments);
+  };
+}();
 /* Нужно:
     1 Сделать функцию рабочей в принципе не меняя логики но доступно ES8+
     2 Общая логика: запрос, если успех, то отправка данных в аналитику, обработка данных и их возврат
@@ -192,89 +222,113 @@ var sendAnalytics = function sendAnalytics(a, b) {
 
 
 var requestData = /*#__PURE__*/function () {
-  var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(_ref2) {
+  var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(_ref3) {
     var id, param, response;
-    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
-        switch (_context2.prev = _context2.next) {
+        switch (_context3.prev = _context3.next) {
           case 0:
-            id = _ref2.id, param = _ref2.param;
-            _context2.next = 3;
+            id = _ref3.id, param = _ref3.param;
+            _context3.prev = 1;
+            _context3.next = 4;
             return serverApiRequest("query/data/".concat(id, "/param/").concat(param));
 
-          case 3:
-            response = _context2.sent;
+          case 4:
+            response = _context3.sent;
+
+            if (!/Error\b/.test(response)) {
+              _context3.next = 7;
+              break;
+            }
+
+            throw new Error(response);
+
+          case 7:
             sendAnalytics("/requestDone", {
+              //вероятно, проблемное место, ответ приходит, но метод был отключен и не может быть использован
+              //недостаточно ТЗ: нет API, куда посылается запрос sendAnalytics
               type: "data",
               id: id,
-              param: param
-            });
-            return _context2.abrupt("return", response);
+              //использование синтаксиса ES6
+              param: param //использование синтаксиса ES6
 
-          case 6:
+            });
+            return _context3.abrupt("return", response.filter(function (i) {
+              return i !== null;
+            }).map(function (i) {
+              return Object.values(i);
+            }).flat());
+
+          case 11:
+            _context3.prev = 11;
+            _context3.t0 = _context3["catch"](1);
+            return _context3.abrupt("return", _context3.t0.message);
+
+          case 14:
           case "end":
-            return _context2.stop();
+            return _context3.stop();
         }
       }
-    }, _callee2);
+    }, _callee3, null, [[1, 11]]);
   }));
 
-  return function requestData(_x2) {
-    return _ref3.apply(this, arguments);
+  return function requestData(_x4) {
+    return _ref4.apply(this, arguments);
   };
 }(); // app proto
 // START DO NOT EDIT app
 
 
-_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
   var log;
-  return regeneratorRuntime.wrap(function _callee3$(_context3) {
+  return regeneratorRuntime.wrap(function _callee4$(_context4) {
     while (1) {
-      switch (_context3.prev = _context3.next) {
+      switch (_context4.prev = _context4.next) {
         case 0:
           log = function log(text) {
             var app = document.querySelector("#app");
             app.appendChild(document.createTextNode(JSON.stringify(text, null, 2)));
             app.appendChild(document.createElement("br"));
-          };
+          }; // Для лаконичности кода можно использовать Promise.all
 
-          _context3.t0 = log;
-          _context3.next = 4;
+
+          _context4.t0 = log;
+          _context4.next = 4;
           return requestData({
             id: 1,
             param: "any"
           });
 
         case 4:
-          _context3.t1 = _context3.sent;
-          (0, _context3.t0)(_context3.t1);
-          _context3.t2 = log;
-          _context3.next = 9;
+          _context4.t1 = _context4.sent;
+          (0, _context4.t0)(_context4.t1);
+          _context4.t2 = log;
+          _context4.next = 9;
           return requestData({
             id: 4,
             param: "string"
           });
 
         case 9:
-          _context3.t3 = _context3.sent;
-          (0, _context3.t2)(_context3.t3);
-          _context3.t4 = log;
-          _context3.next = 14;
+          _context4.t3 = _context4.sent;
+          (0, _context4.t2)(_context4.t3);
+          _context4.t4 = log;
+          _context4.next = 14;
           return requestData({
             id: 4,
             param: 404
           });
 
         case 14:
-          _context3.t5 = _context3.sent;
-          (0, _context3.t4)(_context3.t5);
+          _context4.t5 = _context4.sent;
+          (0, _context4.t4)(_context4.t5);
 
         case 16:
         case "end":
-          return _context3.stop();
+          return _context4.stop();
       }
     }
-  }, _callee3);
+  }, _callee4);
 }))(); // END DO NOT EDIT app
 },{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
