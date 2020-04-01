@@ -182,8 +182,10 @@ var sendAnalytics = /*#__PURE__*/function () {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
+            _context2.prev = 0;
+
             if (!navigator.sendBeacon) {
-              _context2.next = 3;
+              _context2.next = 4;
               break;
             }
 
@@ -192,21 +194,26 @@ var sendAnalytics = /*#__PURE__*/function () {
 
             return _context2.abrupt("return", status ? "Successfully queued!" : "Failure.");
 
-          case 3:
-            _context2.next = 5;
+          case 4:
+            _context2.next = 6;
             return axios.post(a, b);
 
-          case 5:
+          case 6:
             _yield$axios$post = _context2.sent;
             data = _yield$axios$post.data;
             return _context2.abrupt("return", data);
 
-          case 8:
+          case 11:
+            _context2.prev = 11;
+            _context2.t0 = _context2["catch"](0);
+            return _context2.abrupt("return", _context2.t0);
+
+          case 14:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2);
+    }, _callee2, null, [[0, 11]]);
   }));
 
   return function sendAnalytics(_x2, _x3) {
